@@ -47,3 +47,12 @@
 - ผลลัพธ์: สร้าง specs/001-booking/plan.md
 - Constraint ที่ AI ยังไม่ได้ใช้: ไม่มี ทุก Constraint ถูกระบุในตารางตรวจ Constraints
 - สิ่งที่ AI บอกว่าอยากเดาแต่ไม่ได้เดา: เกณฑ์ช่วงเวลาใกล้เคียงตาม Q-01 และขอบเขต audit log เพิ่มเติมตาม Q-02
+
+---
+
+## 2569-09-23 คำสั่ง: /tasks specs/001-booking/spec.md
+
+- เครื่องมือ: Copilot ใน VS Code
+- ไฟล์: `specs/001-booking/spec.md`, `specs/001-booking/plan.md`
+- ผลลัพธ์: สร้าง `specs/001-booking/tasks.md` จำนวน 16 tasks โดย 2 tasks มีสถานะรอ `Q-02`
+- หมายเหตุ: แตกงานตามลำดับ model/API/frontend/test, ครบทุก AC และ Constraint และยังไม่เริ่มทำ task ใด
