@@ -56,3 +56,18 @@
 - ไฟล์: `specs/001-booking/spec.md`, `specs/001-booking/plan.md`
 - ผลลัพธ์: สร้าง `specs/001-booking/tasks.md` จำนวน 16 tasks โดย 2 tasks มีสถานะรอ `Q-02`
 - หมายเหตุ: แตกงานตามลำดับ model/API/frontend/test, ครบทุก AC และ Constraint และยังไม่เริ่มทำ task ใด
+
+---
+
+## 2569-09-23 คำสั่ง: /implement T-01 specs/001-booking/tasks.md
+
+- ไฟล์ที่สร้างหรือแก้:
+  - `backend/app/db/models.py`
+  - `backend/app/db/session.py`
+  - `backend/app/db/migrations/001_init.py`
+  - `backend/tests/conftest.py`
+  - อัปเดตสถานะ T-01 ใน `specs/001-booking/tasks.md`
+- ผลการตรวจ:
+  - สคริปต์ตรวจ migration ผ่าน: สร้างตาราง `slots`, `bookings`, `audit_logs` ครบ และ `bookings` ไม่มีคอลัมน์ `national_id`
+  - `cd backend && pytest -q`: ไม่มี test ที่ค้นพบ (exit code 5) เนื่องจาก T-01 ระบุเฉพาะ `conftest.py` และยังไม่มี test file
+- สิ่งที่เกือบต้องเดา: รูปแบบและวิธีออก `queue_no` ยังติด Q-02 จึงเก็บเป็น nullable โดยไม่กำหนดรูปแบบตาม `plan.md`
