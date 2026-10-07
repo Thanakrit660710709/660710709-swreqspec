@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -25,8 +26,23 @@ def create_booking(req: BookingRequest, hn: str = Depends(get_verified_hn), db: 
     logger.info("booking request slot=%s hn=%s national_id=%s", req.slot_id, hn, req.national_id)
     try:
         booking = service.create_booking(db, hn=hn, slot_id=req.slot_id)
-    except service.SlotFullError:
-        raise HTTPException(status_code=409, detail="ช่วงเวลาเต็ม")
+    except service.SlotFullError as error:
+        alternatives = service.find_alternatives(db, error.slot)
+        return JSONResponse(
+            status_code=409,
+            content={
+                "detail": "ช่วงเวลาเต็ม",
+                "alternatives": [
+                    {
+                        "slot_id": alternative.id,
+                        "slot_date": alternative.slot_date.isoformat(),
+                        "start_time": alternative.start_time.isoformat(),
+                        "remaining": alternative.remaining,
+                    }
+                    for alternative in alternatives
+                ],
+            },
+        )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return {"booking_id": booking.id, "slot_id": booking.slot_id, "queue_no": booking.queue_no}

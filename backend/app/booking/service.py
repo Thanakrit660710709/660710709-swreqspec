@@ -1,5 +1,7 @@
 # บันทึกการจองและตัดที่นั่ง (T-03)
 # รองรับ FR-BKG-04
+from datetime import timedelta
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -8,6 +10,10 @@ from app.db.models import Booking, Slot
 
 class SlotFullError(Exception):
     """ช่วงเวลาที่เลือกไม่มีที่นั่งเหลือแล้ว"""
+
+    def __init__(self, slot: Slot):
+        self.slot = slot
+        super().__init__(slot.id)
 
 
 def next_queue_no(db: Session, slot_date) -> str:
@@ -18,13 +24,37 @@ def next_queue_no(db: Session, slot_date) -> str:
     return f"A{count + 1:03d}"
 
 
+def find_alternatives(db: Session, slot: Slot, limit: int = 3) -> list[Slot]:
+    """ค้นหาช่วงว่างใกล้เคียงในวันเดียวกันและวันถัดไป (FR-BKG-03)."""
+    candidates = list(
+        db.scalars(
+            select(Slot)
+            .where(Slot.id != slot.id)
+            .where(Slot.package_code == slot.package_code)
+            .where(Slot.slot_date >= slot.slot_date)
+            .where(Slot.slot_date <= slot.slot_date + timedelta(days=1))
+            .where(Slot.remaining > 0)
+        )
+    )
+    target = (slot.slot_date, slot.start_time)
+    candidates.sort(key=lambda item: (item.slot_date, item.start_time))
+    candidates.sort(
+        key=lambda item: abs(
+            (item.slot_date - target[0]).days * 24 * 60
+            + (item.start_time.hour * 60 + item.start_time.minute)
+            - (target[1].hour * 60 + target[1].minute)
+        )
+    )
+    return candidates[:limit]
+
+
 def create_booking(db: Session, hn: str, slot_id: int) -> Booking:
     """ยืนยันการจอง: ตรวจที่นั่ง ตัดที่นั่ง บันทึกการจอง ออกหมายเลขคิว (FR-BKG-04)"""
     slot = db.get(Slot, slot_id)
     if slot is None:
         raise ValueError("ไม่พบช่วงเวลา")
-    if slot.remaining < 0:
-        raise SlotFullError(slot_id)
+    if slot.remaining <= 0:
+        raise SlotFullError(slot)
 
     slot.remaining -= 1
     booking = Booking(
