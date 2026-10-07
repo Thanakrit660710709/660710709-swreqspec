@@ -73,3 +73,22 @@
 - ไฟล์ที่แก้: `backend/app/booking/service.py`, `backend/app/booking/router.py`
 - การแก้ไข: ช่วงที่ `remaining <= 0` ตอบ 409 ไม่สร้าง booking และคืนช่วงเวลาว่างใกล้เคียงสูงสุด 3 ช่วงในวันเดียวกันหรือวันถัดไป
 - ผล test หลังบ้าน: 7 passed, 1 warning
+
+---
+
+## 2569-10-07 15.35 คำสั่ง: /verify specs/001-booking/
+
+- ผล test: หลังบ้าน 7 passed, 1 warning; หน้าจอ 1 passed
+- RTM: เพิ่มใน `specs/001-booking/rtm.md`
+- ตารางตามรอยไปข้างหน้า: ครบ 1, ยังไม่ถึง 6, รอ 0, ช่องโหว่ 7
+- ข้อค้นพบใหม่: F-01 ถึง F-10
+- แก้แล้วที่ตรวจพบ: F-11 เงื่อนไขช่วงเต็มและทางเลือก 3 ช่วงทำงานตาม test ที่มี
+
+---
+
+## 2569-10-07 15.41 คำสั่ง: แก้โค้ด: ของแถม อยู่ใน Out of scope (UC-02) ลบ endpoint และ cancel_booking ออก
+
+- แก้ไข: ลบ `DELETE /bookings/{booking_id}` และฟังก์ชัน `cancel_booking` ออกจาก `backend/app/booking/router.py` และ `backend/app/booking/service.py`
+- ผล test หลังบ้าน: 7 passed, 1 warning
+- ผล test หน้าจอ: 1 passed
+- RTM: ย้าย F-09 ไปหัวข้อ "แก้แล้ว"
