@@ -71,3 +71,29 @@
   - สคริปต์ตรวจ migration ผ่าน: สร้างตาราง `slots`, `bookings`, `audit_logs` ครบ และ `bookings` ไม่มีคอลัมน์ `national_id`
   - `cd backend && pytest -q`: ไม่มี test ที่ค้นพบ (exit code 5) เนื่องจาก T-01 ระบุเฉพาะ `conftest.py` และยังไม่มี test file
 - สิ่งที่เกือบต้องเดา: รูปแบบและวิธีออก `queue_no` ยังติด Q-02 จึงเก็บเป็น nullable โดยไม่กำหนดรูปแบบตาม `plan.md`
+
+---
+
+## 2569-09-23 คำสั่ง: /implement T-11 specs/001-booking/tasks.md
+
+- ไฟล์ที่สร้างหรือแก้:
+  - `frontend/src/pages/SlotPicker.jsx`
+  - `frontend/src/api/client.js`
+  - `frontend/src/App.jsx`
+  - `frontend/src/__tests__/SlotPicker.test.jsx`
+  - อัปเดตสถานะ T-11 ใน `specs/001-booking/tasks.md`
+- ผลการตรวจ:
+  - `cd frontend && npm test -- --run src/__tests__/SlotPicker.test.jsx`: ผ่าน 2 tests
+  - รอบแรกของ test พบ assertion ที่เลือกข้อความซ้ำหลายรายการ จึงแก้เฉพาะ assertion ให้ตรวจจำนวนรายการที่แสดง แล้วรันผ่าน
+- สิ่งที่เกือบต้องเดา: ไม่ได้กำหนดรูปแบบข้อมูล API ใหม่ ใช้ฟิลด์ช่วงเวลาตาม `plan.md` และคง `api` จริงเดิมไว้ พร้อมเพิ่ม `mockApi` สำหรับ T-11
+
+---
+
+## 2569-09-23 คำสั่งทีม: แก้ T-11 ให้เลือกช่วงเวลาได้
+
+- เหตุผล: ทีมตรวจพบว่า FR-BKG-06 ระบุการเลือกแพ็กเกจระหว่างเลือกเวลา แต่หน้าจอเดิมแสดงช่วงเวลาเป็นปุ่มโดยยังไม่มีสถานะการเลือก
+- ไฟล์ที่แก้:
+  - `frontend/src/pages/SlotPicker.jsx`
+  - `frontend/src/__tests__/SlotPicker.test.jsx`
+- การแก้ไข: เพิ่มสถานะช่วงเวลาที่เลือก, `aria-pressed`, ข้อความยืนยันช่วงเวลาที่เลือก และล้างช่วงเวลาที่เลือกเมื่อเปลี่ยนแพ็กเกจ
+- สิ่งที่เกือบต้องเดา: ไม่ได้เพิ่มรูปแบบการส่งข้อมูลไป API เพราะ T-11 ใช้ API จำลอง และ spec ยังไม่กำหนดขั้นตอนยืนยันการจองในหน้าจอนี้
