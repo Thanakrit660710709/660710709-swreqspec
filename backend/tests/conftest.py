@@ -1,35 +1,52 @@
-"""Shared database fixtures for backend tests."""
-
-from importlib import import_module
+# เตรียมฐานข้อมูล SQLite ในหน่วยความจำให้ทุก test (ไม่ต้องมี PostgreSQL จริง)
+from datetime import date, time, timedelta
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.models import Base
+from app.db.models import Base, Slot
+from app.db.session import get_db
+from app.main import app
 
-migration_001_init = import_module("app.db.migrations.001_init")
+# ผู้รับบริการที่ยืนยันตัวตนแล้ว HN 0001234
+AUTH = {"Authorization": "Bearer verified:0001234"}
 
 
 @pytest.fixture
-def db_engine():
-    """Provide an isolated SQLite database for each test."""
+def db():
     engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
-    migration_001_init.upgrade(engine)
-    try:
-        yield engine
-    finally:
-        Base.metadata.drop_all(engine)
-        engine.dispose()
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine, autoflush=False)()
+    yield session
+    session.close()
 
 
 @pytest.fixture
-def db_session(db_engine) -> Session:
-    """Provide a session against the migrated test database."""
-    with Session(db_engine) as session:
-        yield session
+def client(db):
+    app.dependency_overrides[get_db] = lambda: db
+    yield TestClient(app)
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def make_slot(db):
+    """สร้างช่วงเวลา 1 ช่วง ค่าเริ่มต้นคือพรุ่งนี้ 09.00 น. แพ็กเกจ BASIC"""
+    def _make(start="09:00", remaining=1, capacity=None, days_from_today=1, package_code="BASIC"):
+        h, m = map(int, start.split(":"))
+        slot = Slot(
+            slot_date=date.today() + timedelta(days=days_from_today),
+            start_time=time(h, m),
+            package_code=package_code,
+            capacity=capacity if capacity is not None else max(remaining, 1),
+            remaining=remaining,
+        )
+        db.add(slot)
+        db.commit()
+        db.refresh(slot)
+        return slot
+    return _make
